@@ -3,9 +3,8 @@ package router
 import (
 	"trainee3/handlers"
 
-	"trainee3/middleware/logger"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/tom-riddle-sr/logger/middleware/logger"
 )
 
 func Set(handlers *handlers.Handlers) {
@@ -13,7 +12,7 @@ func Set(handlers *handlers.Handlers) {
 		ErrorHandler: nil,
 	})
 
-	app.Use(logger.New())
+	app.Use(logger.GetLogger())
 	app.Post("/auth/signIn", handlers.Auth.SignIn)
 	app.Get("/cache/refresh", handlers.Cache.Refresh)
 
