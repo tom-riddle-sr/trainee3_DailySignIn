@@ -52,18 +52,13 @@ func (s *cache) ServicesRefresh() apicode.Code {
 		return apicode.UnknownError
 	}
 
-	setData := model_redis.DSInRedis{
+	json, _ := json.Marshal(model_redis.DSInRedis{
 		ID:      activityModel.ID,
 		Name:    activityModel.Name,
 		Open:    activityModel.Open,
 		Rewards: rewardList,
-	}
+	})
 
-	json, err := json.Marshal(setData)
-	if err != nil {
-		logrus.Error("json.Marshal error:", err)
-		return apicode.UnknownError
-	}
 	if err := s.repo.Redis.Set(s.db.Redis, model_redis.DSActivityTableName, json, 0); err != nil {
 		logrus.Error("redis.Set error:", err)
 		return apicode.UnknownError

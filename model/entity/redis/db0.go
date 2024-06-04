@@ -3,7 +3,7 @@ package redis
 import "trainee3/model/entity/mysql/mysql_trainee3"
 
 const (
-	DSActivityTableName = "DS_Activity"
+	DSActivityTableName string = "DS_Activity"
 )
 
 type DSInRedis struct {
