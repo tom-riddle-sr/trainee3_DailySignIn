@@ -40,7 +40,7 @@ func (r *Mysql) QueryAll(db *gorm.DB, model interface{}, rewardList *[]mysql_tra
 }
 
 func (r *Mysql) Update(db *gorm.DB, model interface{}) error {
-	if result := db.Model(model).Updates(model); result.Error != nil {
+	if result := db.Model(&model).Updates(model); result.Error != nil {
 		return result.Error
 	}
 
