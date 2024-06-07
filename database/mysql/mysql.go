@@ -20,7 +20,8 @@ type mysqlDB struct {
 type DBName string
 
 const (
-	Trainee3 DBName = "trainee3"
+	Trainee3   DBName = "trainee3"
+	Trainee3_1 DBName = "trainee3_1"
 )
 
 // Mysql版
@@ -43,7 +44,8 @@ func New(cfg *config.Config) (IMysqlDB, error) {
 
 	return mysqlDB{
 		map[DBName]*gorm.DB{
-			Trainee3: db,
+			Trainee3:   db,
+			Trainee3_1: db,
 		},
 	}, nil
 }

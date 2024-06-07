@@ -9,7 +9,7 @@ import (
 type IMysql interface {
 	Query(db *gorm.DB, model interface{}, condition string, values ...interface{}) error
 	QueryAll(db *gorm.DB, model interface{}, rewardList *[]mysql_trainee3.DSReward, condition string, values ...interface{}) error
-	Update(db *gorm.DB, model interface{}) error
+	Update(db *gorm.DB, condition string, value interface{}, model interface{}, model2 map[string]interface{}) error
 	UpdateColumns(db *gorm.DB, model interface{}, cols map[string]interface{}) error
 	Save(db *gorm.DB, model interface{}) error
 }
@@ -39,8 +39,8 @@ func (r *Mysql) QueryAll(db *gorm.DB, model interface{}, rewardList *[]mysql_tra
 	return nil
 }
 
-func (r *Mysql) Update(db *gorm.DB, model interface{}) error {
-	if result := db.Model(&model).Updates(model); result.Error != nil {
+func (r *Mysql) Update(db *gorm.DB, condition string, value interface{}, model interface{}, cols map[string]interface{}) error {
+	if result := db.Model(&model).Where(condition, value).Updates(cols); result.Error != nil {
 		return result.Error
 	}
 

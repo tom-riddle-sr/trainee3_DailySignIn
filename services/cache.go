@@ -28,7 +28,6 @@ func NewCache(repo *repository.Repo, db *database.Database) ICache {
 	}
 }
 
-// TODO 撰寫單元測試
 func (s *cache) ServicesRefresh() apicode.Code {
 	var (
 		activityModel mysql_trainee3.DSActivity

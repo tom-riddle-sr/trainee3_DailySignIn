@@ -13,7 +13,6 @@ func main() {
 	if err != nil {
 		logrus.Fatalf("InitializeHandler error: %v", err)
 	}
-
 	router.Set(app.Handlers)
 
 	logrus.SetFormatter(&logrus.TextFormatter{

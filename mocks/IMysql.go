@@ -188,17 +188,17 @@ func (_c *IMysql_Save_Call) RunAndReturn(run func(*gorm.DB, interface{}) error) 
 	return _c
 }
 
-// Update provides a mock function with given fields: db, model
-func (_m *IMysql) Update(db *gorm.DB, model interface{}) error {
-	ret := _m.Called(db, model)
+// Update provides a mock function with given fields: db, condition, value, model, model2
+func (_m *IMysql) Update(db *gorm.DB, condition string, value interface{}, model interface{}, model2 map[string]interface{}) error {
+	ret := _m.Called(db, condition, value, model, model2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Update")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(*gorm.DB, interface{}) error); ok {
-		r0 = rf(db, model)
+	if rf, ok := ret.Get(0).(func(*gorm.DB, string, interface{}, interface{}, map[string]interface{}) error); ok {
+		r0 = rf(db, condition, value, model, model2)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -213,14 +213,17 @@ type IMysql_Update_Call struct {
 
 // Update is a helper method to define mock.On call
 //   - db *gorm.DB
+//   - condition string
+//   - value interface{}
 //   - model interface{}
-func (_e *IMysql_Expecter) Update(db interface{}, model interface{}) *IMysql_Update_Call {
-	return &IMysql_Update_Call{Call: _e.mock.On("Update", db, model)}
+//   - model2 map[string]interface{}
+func (_e *IMysql_Expecter) Update(db interface{}, condition interface{}, value interface{}, model interface{}, model2 interface{}) *IMysql_Update_Call {
+	return &IMysql_Update_Call{Call: _e.mock.On("Update", db, condition, value, model, model2)}
 }
 
-func (_c *IMysql_Update_Call) Run(run func(db *gorm.DB, model interface{})) *IMysql_Update_Call {
+func (_c *IMysql_Update_Call) Run(run func(db *gorm.DB, condition string, value interface{}, model interface{}, model2 map[string]interface{})) *IMysql_Update_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(*gorm.DB), args[1].(interface{}))
+		run(args[0].(*gorm.DB), args[1].(string), args[2].(interface{}), args[3].(interface{}), args[4].(map[string]interface{}))
 	})
 	return _c
 }
@@ -230,7 +233,7 @@ func (_c *IMysql_Update_Call) Return(_a0 error) *IMysql_Update_Call {
 	return _c
 }
 
-func (_c *IMysql_Update_Call) RunAndReturn(run func(*gorm.DB, interface{}) error) *IMysql_Update_Call {
+func (_c *IMysql_Update_Call) RunAndReturn(run func(*gorm.DB, string, interface{}, interface{}, map[string]interface{}) error) *IMysql_Update_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -7,7 +7,9 @@ import (
 	"trainee3/model/entity/mysql/mysql_trainee3"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
+	"github.com/tom-riddle-sr/struct_change_map"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -36,7 +38,6 @@ func TestMysql_Query_ErrRecordNotFound_Should_Return_Nil(t *testing.T) {
 	assert.NoError(t, actualErr)                              // 預期是沒有錯誤
 	assert.EqualValues(t, expectDsActivity, actualDsActivity) // 預期是一樣的
 }
-
 func TestMysql_Query_Error_Should_Return_Error(t *testing.T) {
 	// expectDsActivity := mysql_trainee3.DSActivity{}
 	actualDsActivity := mysql_trainee3.DSActivity{}
@@ -62,7 +63,6 @@ func TestMysql_Query_Error_Should_Return_Error(t *testing.T) {
 	assert.Error(t, actualErr)
 	assert.EqualError(t, actualErr, "any error")
 }
-
 func TestMysql_Query_Success_Should_Return_Nil(t *testing.T) {
 	expectDsActivity := mysql_trainee3.DSActivity{
 		ID:   1,
@@ -92,7 +92,6 @@ func TestMysql_Query_Success_Should_Return_Nil(t *testing.T) {
 	assert.NoError(t, actualErr)                              // 預期是沒有錯誤
 	assert.EqualValues(t, expectDsActivity, actualDsActivity) // 預期是一樣的
 }
-
 func TestMysql_QueryAll_ErrRecordNotFound_Should_Return_Nil(t *testing.T) {
 	expectDsActivity := mysql_trainee3.DSActivity{}
 	actualDsActivity := mysql_trainee3.DSActivity{}
@@ -119,9 +118,7 @@ func TestMysql_QueryAll_ErrRecordNotFound_Should_Return_Nil(t *testing.T) {
 	assert.NoError(t, actualErr)                              // 預期是沒有錯誤
 	assert.EqualValues(t, expectDsActivity, actualDsActivity) // 預期是一樣的
 }
-
 func TestMysql_QueryAll_Error_Should_Return_Error(t *testing.T) {
-	// expectDsActivity := mysql_trainee3.DSActivity{}
 	actualDsActivity := mysql_trainee3.DSActivity{}
 	rewardList := []mysql_trainee3.DSReward{}
 
@@ -146,15 +143,16 @@ func TestMysql_QueryAll_Error_Should_Return_Error(t *testing.T) {
 	assert.Error(t, actualErr)
 	assert.EqualError(t, actualErr, "any error")
 }
-
 func TestMysql_QueryAll_Success_Should_Return_Nil(t *testing.T) {
-	rewardList := []mysql_trainee3.DSReward{}
-	expectDsActivity := mysql_trainee3.DSActivity{
-		ID:   1,
-		Name: "value2",
-		Open: false,
+	expectRewardList := []mysql_trainee3.DSReward{
+		{
+			ID:         1,
+			ActivityID: 2,
+			Weight:     3,
+			Rewards:    "test rewards",
+		},
 	}
-	actualDsActivity := mysql_trainee3.DSActivity{}
+	actualRewardList := []mysql_trainee3.DSReward{}
 
 	db, mock, err := sqlmock.New() // 是一個假的資料庫
 	if err != nil {
@@ -168,17 +166,23 @@ func TestMysql_QueryAll_Success_Should_Return_Nil(t *testing.T) {
 	}
 
 	mock.
-		ExpectQuery("SELECT (.+) FROM `DS_Activity` (.+)").
-		WillReturnRows(sqlmock.NewRows([]string{"ID", "Name", "Open"}).AddRow(1, "value2", false))
+		ExpectQuery("SELECT (.+) FROM `DS_Rewards` (.+)").
+		WillReturnRows(sqlmock.NewRows([]string{"Id", "ActivityId", "weight", "Rewards"}).
+			AddRow(1, 2, 3, "test rewards"))
 
 	mysqlRepo := Mysql{}
-	actualErr := mysqlRepo.QueryAll(gormDB, &actualDsActivity, &rewardList, "Open = ?", 1)
+	actualErr := mysqlRepo.QueryAll(gormDB, &mysql_trainee3.DSReward{}, &actualRewardList, "Open = ?", 1)
 
 	assert.NoError(t, actualErr)                              // 預期是沒有錯誤
-	assert.EqualValues(t, expectDsActivity, actualDsActivity) // 預期是一樣的
+	assert.EqualValues(t, expectRewardList, actualRewardList) // 預期是一樣的
 }
 func TestMysql_Update_Error_Should_Return_Error(t *testing.T) {
-	actualDsActivity := mysql_trainee3.DSActivity{}
+	actualDsActivity := mysql_trainee3.DSActivity{
+		ID:   1,
+		Name: "test",
+		Open: false,
+	}
+	cols := structs.Map(&actualDsActivity)
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -193,51 +197,104 @@ func TestMysql_Update_Error_Should_Return_Error(t *testing.T) {
 	expectErr := errors.New("any error")
 	mock.ExpectBegin()
 	mock.ExpectExec("^UPDATE `DS_Activity` (.+)$").
-		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg()).
-		WillReturnResult(sqlmock.NewErrorResult(expectErr))
+		WithArgs(1, "test", false, 1).
+		WillReturnError(expectErr)
 	mock.ExpectRollback()
-
 	mysqlRepo := Mysql{}
-	actualErr := mysqlRepo.Update(gormDB, actualDsActivity)
+	actualErr := mysqlRepo.Update(gormDB, "id = ?", 1, actualDsActivity, cols)
 
 	assert.Error(t, actualErr)
-
-	assert.Contains(t, actualErr.Error(), expectErr.Error())
-	assert.EqualError(t, actualErr, expectErr.Error())
-
+	assert.Equal(t, expectErr, actualErr)
 }
+func TestMysql_Update_Success_Should_Return_Nil(t *testing.T) {
+	actualDsActivity := mysql_trainee3.DSActivity{
+		ID:   1,
+		Name: "test",
+		Open: false,
+	}
+	cols := struct_change_map.New(&actualDsActivity)
 
-// func TestMysql_QueryAll_Success_Should_Return_Nil(t *testing.T) {
-// 	rewardList := []mysql_trainee3.DSReward{}
-// 	expectDsActivity := mysql_trainee3.DSActivity{
-// 		ID:   1,
-// 		Name: "value2",
-// 		Open: false,
-// 	}
-// 	actualDsActivity := mysql_trainee3.DSActivity{}
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+	gormDB, err := convertToGormDB(db, mock)
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
 
-// 	db, mock, err := sqlmock.New() // 是一個假的資料庫
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-// 	}
-// 	defer db.Close()
+	mock.ExpectBegin()
+	mock.ExpectExec("^UPDATE `DS_Activity` (.+)$").
+		WithArgs(1, "test", false, 1).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
 
-// 	gormDB, err := convertToGormDB(db, mock) //用來轉換成gorm的資料庫
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-// 	}
+	mysqlRepo := Mysql{}
+	actualErr := mysqlRepo.Update(gormDB, "id = ?", 1, actualDsActivity, cols)
 
-// 	mock.
-// 		ExpectQuery("SELECT (.+) FROM `DS_Activity` (.+)").
-// 		WillReturnRows(sqlmock.NewRows([]string{"ID", "Name", "Open"}).AddRow(1, "value2", false))
+	assert.NoError(t, actualErr)
+}
+func TestMysql_UpdateColumns_Error_Should_Return_Error(t *testing.T) {
+	actualDsActivity := mysql_trainee3.DSActivity{
+		ID:   1,
+		Name: "test",
+		Open: false,
+	}
 
-// 	mysqlRepo := Mysql{}
-// 	actualErr := mysqlRepo.QueryAll(gormDB, &actualDsActivity, &rewardList, "Open = ?", 1)
+	cols := map[string]interface{}{"Id": 1, "Name": "test", "Open": false}
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+	gormDB, err := convertToGormDB(db, mock)
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
 
-//		assert.NoError(t, actualErr)                              // 預期是沒有錯誤
-//		assert.EqualValues(t, expectDsActivity, actualDsActivity) // 預期是一樣的
-//	}
+	expectErr := errors.New("any error")
+	mock.ExpectBegin()
+	mock.ExpectExec("^UPDATE `DS_Activity` (.+)$").
+		WithArgs(1, "test", false, 1).
+		WillReturnError(expectErr)
+	mock.ExpectRollback()
+	mysqlRepo := Mysql{}
+	actualErr := mysqlRepo.UpdateColumns(gormDB, &actualDsActivity, cols)
 
+	assert.Error(t, actualErr)
+	assert.Equal(t, expectErr, actualErr)
+}
+func TestMysql_UpdateColumns_Success_Should_Return_Nil(t *testing.T) {
+	actualDsActivity := mysql_trainee3.DSActivity{
+		ID:   1,
+		Name: "test",
+		Open: false,
+	}
+
+	cols := map[string]interface{}{"Id": 1, "Name": "test", "Open": false}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+	gormDB, err := convertToGormDB(db, mock)
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	mock.ExpectBegin()
+	mock.ExpectExec("^UPDATE `DS_Activity` (.+)$").
+		WithArgs(1, "test", false, 1).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	mysqlRepo := Mysql{}
+	actualErr := mysqlRepo.UpdateColumns(gormDB, &actualDsActivity, cols)
+
+	assert.NoError(t, actualErr)
+}
 func TestMysql_Save_Error_Should_Return_Error(t *testing.T) {
 	actualModel := mysql_trainee3.DSActivity{}
 
@@ -268,11 +325,33 @@ func TestMysql_Save_Error_Should_Return_Error(t *testing.T) {
 
 	assert.Error(t, actualErr)
 	assert.EqualError(t, actualErr, expectErr.Error())
+}
+func TestMysql_Save_Success_Should_Return_Nil(t *testing.T) {
+	actualModel := mysql_trainee3.DSActivity{}
 
-	// // 检查所有预期的操作是否都被调用
-	// if err := mock.ExpectationsWereMet(); err != nil {
-	// 	t.Errorf("there were unfulfilled expectations: %s", err)
-	// }
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	gormDB, err := convertToGormDB(db, mock)
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectExec("^INSERT INTO `DS_Activity` (.+)$").
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectCommit()
+
+	mysqlRepo := Mysql{}
+	actualErr := mysqlRepo.Save(gormDB, &actualModel)
+
+	assert.NoError(t, actualErr)
 }
 
 func convertToGormDB(db *sql.DB, mock sqlmock.Sqlmock) (*gorm.DB, error) {

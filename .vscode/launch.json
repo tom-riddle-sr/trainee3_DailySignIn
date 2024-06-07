@@ -11,7 +11,6 @@
       "mode": "auto",
       "program": "${workspaceFolder}/main.go",
       "envFile": "${workspaceFolder}/.vscode/connection_info.env"
-      // TODO 如何關聯 env ㄒㄧㄒ
     },
     {
       "name": "Launch mysql gen",
